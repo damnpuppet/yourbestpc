@@ -1,25 +1,36 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
 
 export default function Results() {
-  const router = useRouter();
-  const { budget, profile } = router.query;
-  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [configuration, setConfiguration] = useState(null);
+  const [budget, setBudget] = useState(null);
+  const [profile, setProfile] = useState(null);
 
   useEffect(() => {
     const fetchConfiguration = async () => {
       try {
+        // Obtener datos de localStorage en lugar de parámetros de URL
+        const storedBudget = localStorage.getItem('yourbestpc_budget');
+        const storedProfile = localStorage.getItem('yourbestpc_profile');
+        
+        if (!storedBudget || !storedProfile) {
+          setError('Parámetros de búsqueda inválidos');
+          setLoading(false);
+          return;
+        }
+
+        setBudget(storedBudget);
+        setProfile(storedProfile);
+        
         // En un entorno real, esto llamaría a la API para obtener la configuración
         // Por ahora, simulamos una respuesta
         setTimeout(() => {
           const mockConfiguration = {
-            budget: parseFloat(budget),
-            profile,
+            budget: parseFloat(storedBudget),
+            profile: storedProfile,
             components: {
               cpu: {
                 name: 'AMD Ryzen 7 5800X',
@@ -76,13 +87,8 @@ export default function Results() {
       }
     };
 
-    if (budget && profile) {
-      fetchConfiguration();
-    } else {
-      setError('Parámetros de búsqueda inválidos');
-      setLoading(false);
-    }
-  }, [budget, profile]);
+    fetchConfiguration();
+  }, []);
 
   const handleExportPDF = () => {
     alert('Función de exportación a PDF implementada en la versión completa');
@@ -143,6 +149,43 @@ export default function Results() {
               </p>
             </div>
             
+            <div className="bg-gray-700 rounded-lg p-6">
+              <h3 className="text-xl font-bold mb-4">Comparativa de precios</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-gray-800 p-4 rounded-lg">
+                  <h4 className="text-lg font-medium mb-2">PcComponentes</h4>
+                  <p className="text-2xl font-bold">{configuration?.totalPrice.pccomponentes.toFixed(2)}€</p>
+                  <p className="text-sm text-gray-400 mt-1">PC montado y enviado</p>
+                </div>
+                
+                <div className="bg-gray-800 p-4 rounded-lg">
+                  <h4 className="text-lg font-medium mb-2">CoolMod</h4>
+                  <p className="text-2xl font-bold">{configuration?.totalPrice.coolmod.toFixed(2)}€</p>
+                  <p className="text-sm text-gray-400 mt-1">PC montado y enviado</p>
+                </div>
+                
+                <div className="bg-violet-900 p-4 rounded-lg">
+                  <h4 className="text-lg font-medium mb-2">Mejor opción</h4>
+                  <p className="text-2xl font-bold">{configuration?.totalPrice.bestIndividual.toFixed(2)}€</p>
+                  <p className="text-sm text-gray-400 mt-1">Comprando componentes por separado</p>
+                </div>
+              </div>
+              
+              <div className="mt-6 bg-gray-800 p-4 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h4 className="text-lg font-medium">Ahorro estimado</h4>
+                    <p className="text-sm text-gray-400">Comprando cada componente en la tienda más barata</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-green-400">{configuration?.savings.toFixed(2)}€</p>
+                    <p className="text-sm text-gray-400">vs. {configuration?.bestStore === 'pccomponentes' ? 'PcComponentes' : 'CoolMod'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
             <div className="mt-6 flex justify-end">
               <button
                 onClick={handleExportPDF}
@@ -170,7 +213,15 @@ export default function Results() {
                   <div className="w-full md:w-3/4">
                     <div className="flex items-start justify-between">
                       <div>
-                        <span className="text-sm text-violet-400 font-medium">{type}</span>
+                        <span className="text-sm text-violet-400 font-medium">
+                          {type === 'cpu' ? 'Procesador' :
+                           type === 'gpu' ? 'Tarjeta gráfica' :
+                           type === 'ram' ? 'Memoria RAM' :
+                           type === 'motherboard' ? 'Placa base' :
+                           type === 'storage' ? 'Almacenamiento' :
+                           type === 'psu' ? 'Fuente de alimentación' :
+                           type === 'case' ? 'Caja' : type}
+                        </span>
                         <h4 className="text-lg font-bold mt-1">{component.name}</h4>
                       </div>
                       <span className="bg-violet-600 text-white text-sm font-bold px-3 py-1 rounded-full">
