@@ -20,8 +20,12 @@ export default function Home() {
     setError('');
     
     try {
-      // Redirigir a la página de resultados con los parámetros
-      window.location.href = `/results?budget=${budget}&profile=${profile}`;
+      // Guardar datos en localStorage en lugar de usar parámetros de URL
+      localStorage.setItem('yourbestpc_budget', budget);
+      localStorage.setItem('yourbestpc_profile', profile);
+      
+      // Navegar a la página de resultados sin parámetros
+      window.location.href = '/results';
     } catch (error) {
       console.error('Error al generar configuración:', error);
       setError('Ha ocurrido un error al generar la configuración. Por favor, inténtalo de nuevo.');
